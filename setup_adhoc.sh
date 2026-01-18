@@ -55,7 +55,7 @@ if [ "$DEVICE" == "A" ]; then
         apt-get install -y dnsmasq
     fi
 
-    # Stop everything
+    # Stop everything and block NetworkManager
     echo "[1/5] Stopping services..."
     systemctl stop hostapd 2>/dev/null || true
     systemctl stop dnsmasq 2>/dev/null || true
@@ -63,6 +63,9 @@ if [ "$DEVICE" == "A" ]; then
     killall hostapd 2>/dev/null || true
     killall dnsmasq 2>/dev/null || true
     killall wpa_supplicant 2>/dev/null || true
+
+    # Tell NetworkManager to leave this interface alone
+    nmcli device set $INTERFACE managed no 2>/dev/null || true
     nmcli device disconnect $INTERFACE 2>/dev/null || true
 
     # Configure interface
@@ -112,6 +115,9 @@ EOF
     echo "SSID: $SSID"
     echo "Password: $PASSWORD"
     echo "IP: $IP"
+    echo ""
+    echo "Interface status:"
+    iwconfig $INTERFACE 2>/dev/null | head -3
     echo ""
     echo "Now run on Device B: sudo ./setup_adhoc.sh"
     echo "Then on both: python3 master.py"
